@@ -419,6 +419,27 @@ html, body {
 
 .debug-toggle-label input { cursor: pointer; accent-color: #f7c948; }
 
+.debug-threshold-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+}
+
+.debug-threshold-label input[type=range] {
+  width: 80px;
+  accent-color: #f7c948;
+  cursor: pointer;
+}
+
+#debug-threshold-value {
+  font-family: monospace;
+  color: #f7c948;
+  min-width: 32px;
+}
+
 #debug-clear, #debug-panel-close {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);

@@ -6,7 +6,7 @@ const CONFIG = {
   blurSampleWidth: 160,
   blurSampleHeight: 120,
   captureQuality: 0.88,
-  confidenceThreshold: 0.8,
+  confidenceThreshold: 0.6,
 };
 
 const AI_BASE = 'https://ms-ai-services.public.homologation.lb1.yes.network';
@@ -304,6 +304,13 @@ document.getElementById('debug-panel-close').addEventListener('click', () => {
 
 debugEnabled_cb.addEventListener('change', () => {
   debugEnabled = debugEnabled_cb.checked;
+});
+
+const thresholdSlider = document.getElementById('debug-threshold');
+const thresholdLabel  = document.getElementById('debug-threshold-value');
+thresholdSlider.addEventListener('input', () => {
+  CONFIG.confidenceThreshold = thresholdSlider.valueAsNumber / 100;
+  thresholdLabel.textContent = `${thresholdSlider.value}%`;
 });
 
 document.getElementById('debug-clear').addEventListener('click', () => {
