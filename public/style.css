@@ -488,12 +488,6 @@ html, body {
   min-height: 44px;
 }
 
-.debug-persist-note {
-  font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  padding-bottom: 10px;
-  font-style: italic;
-}
 
 #debug-log-list {
   flex: 1;
