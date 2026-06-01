@@ -14,7 +14,7 @@ const AI_BASE = 'https://ms-ai-services.public.homologation.lb1.yes.network';
 /* ─── Helpers ───────────────────────────────────────────────── */
 
 function normalizeSkus(skus) {
-  if (Array.isArray(skus)) return skus.map(s => String(s).trim()).filter(Boolean).join(', ');
+  if (Array.isArray(skus)) return skus.map(s => String(s).trim()).filter(Boolean).join('\n');
   if (typeof skus === 'string') return skus.trim();
   return '';
 }
