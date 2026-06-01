@@ -377,9 +377,13 @@ async function blobToThumbUrl(blob) {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => {
+      const MAX = 144;
+      const ratio = img.naturalWidth / img.naturalHeight;
+      const w = ratio >= 1 ? MAX : Math.round(MAX * ratio);
+      const h = ratio >= 1 ? Math.round(MAX / ratio) : MAX;
       const tc = document.createElement('canvas');
-      tc.width = 128; tc.height = 96;
-      tc.getContext('2d').drawImage(img, 0, 0, 128, 96);
+      tc.width = w; tc.height = h;
+      tc.getContext('2d').drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
       tc.toBlob(b => resolve(URL.createObjectURL(b)), 'image/jpeg', 0.7);
     };

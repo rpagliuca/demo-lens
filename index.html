@@ -83,18 +83,23 @@
 
     <div id="debug-panel" class="hidden">
       <div id="debug-panel-header">
-        <span class="debug-title">&#60;/&#62; Dev Log</span>
-        <label class="debug-toggle-label">
-          <input type="checkbox" id="debug-enabled" autocomplete="off">
-          <span>Ativar</span>
-        </label>
-        <label class="debug-threshold-label">
-          <span>Threshold: </span>
-          <input type="range" id="debug-threshold" min="0" max="100" step="1" value="60" autocomplete="off">
-          <span id="debug-threshold-value">60%</span>
-        </label>
-        <button id="debug-clear">Limpar</button>
-        <button id="debug-panel-close">✕</button>
+        <div class="debug-header-row1">
+          <span class="debug-title">&#60;/&#62; Dev Log</span>
+          <button id="debug-panel-close">Fechar</button>
+        </div>
+        <div class="debug-header-row2">
+          <label class="debug-toggle-label">
+            <input type="checkbox" id="debug-enabled" autocomplete="off">
+            <span>Ativar log</span>
+          </label>
+          <label class="debug-threshold-label">
+            <span>Threshold</span>
+            <input type="range" id="debug-threshold" min="0" max="100" step="1" value="60" autocomplete="off">
+            <span id="debug-threshold-value">60%</span>
+          </label>
+          <button id="debug-clear">Limpar log</button>
+        </div>
+        <p class="debug-persist-note">Fechar não apaga o log — ele continua gravando em segundo plano</p>
       </div>
       <div id="debug-log-list"></div>
     </div>
