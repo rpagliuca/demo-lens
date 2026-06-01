@@ -11,6 +11,14 @@ const CONFIG = {
 
 const AI_BASE = 'https://ms-ai-services.public.homologation.lb1.yes.network';
 
+/* ─── Helpers ───────────────────────────────────────────────── */
+
+function normalizeSkus(skus) {
+  if (Array.isArray(skus)) return skus.map(s => String(s).trim()).filter(Boolean).join(', ');
+  if (typeof skus === 'string') return skus.trim();
+  return '';
+}
+
 /* ─── State ─────────────────────────────────────────────────── */
 
 let currentMode     = 'sku';
@@ -188,7 +196,7 @@ function handleResponse(payload) {
 
   const data = payload.data;
   const confidence = typeof data.confidence === 'number' ? data.confidence : 0;
-  const skus = typeof data.skus === 'string' ? data.skus.trim() : '';
+  const skus = normalizeSkus(data.skus);
 
   // Low confidence OR unknown SKU → silent, keep trying
   if (confidence < CONFIG.confidenceThreshold || !skus || skus.toLowerCase() === 'unknown') {
@@ -335,7 +343,7 @@ function addDebugLog({ ts, endpoint, latencyMs, thumb, response }) {
   const conf   = response?.data?.confidence;
   const confPct = typeof conf === 'number' ? `${(conf * 100).toFixed(1)}%` : '—';
   const passed  = typeof conf === 'number' && conf >= CONFIG.confidenceThreshold
-               && response?.data?.skus?.toLowerCase() !== 'unknown';
+               && normalizeSkus(response?.data?.skus).toLowerCase() !== 'unknown';
 
   const el = document.createElement('div');
   el.className = 'debug-entry';
