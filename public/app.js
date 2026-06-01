@@ -28,6 +28,7 @@ let captureTimer    = null;
 let stream          = null;
 let debugEnabled    = false;
 let debugEntryCount = 0;
+let debugLog        = [];   // mirrors DOM entries, newest first: [{ts, endpoint, latencyMs, response, thumbBlob}]
 
 /* ─── DOM refs ──────────────────────────────────────────────── */
 
@@ -322,17 +323,78 @@ thresholdSlider.addEventListener('input', () => {
 });
 
 document.getElementById('debug-clear').addEventListener('click', () => {
-  // Revoke all stored blob URLs to free memory before wiping DOM
   debugLogList.querySelectorAll('img.debug-thumb[data-blob]').forEach(img => {
     URL.revokeObjectURL(img.src);
   });
   debugLogList.innerHTML = '<p class="debug-empty">Sem registros</p>';
   debugEntryCount = 0;
+  debugLog = [];
 });
+
+document.getElementById('debug-export').addEventListener('click', exportDebugLog);
+
+async function exportDebugLog() {
+  if (!debugLog.length) { alert('Sem registros no log para exportar.'); return; }
+
+  const btn = document.getElementById('debug-export');
+  btn.disabled = true;
+  btn.textContent = 'Exportando...';
+
+  try {
+    const zip = new JSZip();
+    const imgFolder = zip.folder('images');
+
+    const chronological = [...debugLog].reverse(); // oldest first
+
+    const rows = [['#', 'timestamp', 'endpoint', 'latency_ms', 'confidence', 'passed', 'skus', 'image_file', 'full_response']];
+    chronological.forEach((entry, i) => {
+      const n = i + 1;
+      const imgFilename = `frame_${String(n).padStart(3, '0')}.jpg`;
+      if (entry.thumbBlob) imgFolder.file(imgFilename, entry.thumbBlob);
+
+      const conf = entry.response?.data?.confidence;
+      const confPct = typeof conf === 'number' ? `${(conf * 100).toFixed(1)}%` : '';
+      const passed  = typeof conf === 'number' && conf >= CONFIG.confidenceThreshold
+                   && normalizeSkus(entry.response?.data?.skus).toLowerCase() !== 'unknown';
+
+      rows.push([
+        n,
+        formatTs(entry.ts),
+        entry.endpoint,
+        entry.latencyMs,
+        confPct,
+        passed ? 'sim' : 'nao',
+        normalizeSkus(entry.response?.data?.skus),
+        entry.thumbBlob ? `images/${imgFilename}` : '',
+        JSON.stringify(entry.response),
+      ]);
+    });
+
+    zip.file('log.csv', rows.map(r => r.map(c => csvCell(String(c ?? ''))).join(',')).join('\r\n'));
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `sku-log-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Exportar Log';
+  }
+}
+
+function csvCell(val) {
+  return /[,"\n\r]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
+}
 
 // Called immediately after each request — builds one DOM node and prepends it.
 // Opening the panel is instant because the DOM is already built.
 function addDebugLog({ ts, endpoint, latencyMs, thumb, response }) {
+  debugLog.unshift({ ts, endpoint, latencyMs, response, thumbBlob: thumb.blob ?? null });
   debugEntryCount++;
   if (debugEntryCount > 50) pruneOldestDebugEntry();
 
@@ -380,6 +442,7 @@ function pruneOldestDebugEntry() {
   if (img) URL.revokeObjectURL(img.src);
   last.remove();
   debugEntryCount--;
+  debugLog.pop();
 }
 
 /* ─── Debug thumbnail ─────────────────────────────────────────── */
@@ -404,7 +467,7 @@ async function blobToThumb(blob) {
       const scale = DISP / Math.max(cw, ch);
       const dw = Math.round(cw * scale);
       const dh = Math.round(ch * scale);
-      tc.toBlob(b => resolve({ url: URL.createObjectURL(b), w: dw, h: dh }), 'image/jpeg', 0.7);
+      tc.toBlob(b => resolve({ url: URL.createObjectURL(b), blob: b, w: dw, h: dh }), 'image/jpeg', 0.7);
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve({ url: '', w: 72, h: 54 }); };
     img.src = url;
