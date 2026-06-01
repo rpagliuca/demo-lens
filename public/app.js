@@ -160,8 +160,8 @@ async function runAnalysis() {
     const latencyMs = Date.now() - t0;
 
     if (debugEnabled) {
-      const thumbUrl = await blobToThumbUrl(blob);
-      addDebugLog({ ts: new Date(), endpoint: apiEndpoint(), latencyMs, thumbUrl, response });
+      const thumb = await blobToThumb(blob);
+      addDebugLog({ ts: new Date(), endpoint: apiEndpoint(), latencyMs, thumb, response });
     }
 
     handleResponse(response);
@@ -169,8 +169,8 @@ async function runAnalysis() {
     console.error('Analysis failed:', err);
     setStatus('Erro na análise', 'error');
     if (debugEnabled && blob) {
-      const thumbUrl = await blobToThumbUrl(blob);
-      addDebugLog({ ts: new Date(), endpoint: apiEndpoint(), latencyMs: Date.now() - t0, thumbUrl, response: { error: err.message } });
+      const thumb = await blobToThumb(blob);
+      addDebugLog({ ts: new Date(), endpoint: apiEndpoint(), latencyMs: Date.now() - t0, thumb, response: { error: err.message } });
     }
   } finally {
     clearTimeout(slowTimer);
@@ -324,7 +324,7 @@ document.getElementById('debug-clear').addEventListener('click', () => {
 
 // Called immediately after each request — builds one DOM node and prepends it.
 // Opening the panel is instant because the DOM is already built.
-function addDebugLog({ ts, endpoint, latencyMs, thumbUrl, response }) {
+function addDebugLog({ ts, endpoint, latencyMs, thumb, response }) {
   debugEntryCount++;
   if (debugEntryCount > 50) pruneOldestDebugEntry();
 
@@ -339,8 +339,12 @@ function addDebugLog({ ts, endpoint, latencyMs, thumbUrl, response }) {
 
   const el = document.createElement('div');
   el.className = 'debug-entry';
+  // Explicit width/height on <img> so browser never needs to guess intrinsic size
   el.innerHTML = `
-    <img class="debug-thumb" data-blob src="${thumbUrl || ''}" alt="frame">
+    <img class="debug-thumb" data-blob
+         src="${thumb.url || ''}"
+         width="${thumb.w}" height="${thumb.h}"
+         alt="frame">
     <div class="debug-entry-body">
       <div class="debug-meta">
         <span class="debug-ts">${formatTs(ts)}</span>
@@ -372,22 +376,29 @@ function pruneOldestDebugEntry() {
 
 /* ─── Debug thumbnail ─────────────────────────────────────────── */
 
-async function blobToThumbUrl(blob) {
+// Returns {url, w, h} — explicit display dimensions so <img> never guesses.
+async function blobToThumb(blob) {
   return new Promise(resolve => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => {
-      const MAX = 144;
-      const ratio = img.naturalWidth / img.naturalHeight;
-      const w = ratio >= 1 ? MAX : Math.round(MAX * ratio);
-      const h = ratio >= 1 ? Math.round(MAX / ratio) : MAX;
+      const MAX_PX = 144;   // canvas resolution
+      const DISP   = 72;    // max display size (css px)
+      const ratio  = img.naturalWidth / img.naturalHeight;
+      // canvas dimensions preserve aspect ratio
+      const cw = ratio >= 1 ? MAX_PX : Math.round(MAX_PX * ratio);
+      const ch = ratio >= 1 ? Math.round(MAX_PX / ratio) : MAX_PX;
       const tc = document.createElement('canvas');
-      tc.width = w; tc.height = h;
-      tc.getContext('2d').drawImage(img, 0, 0, w, h);
+      tc.width = cw; tc.height = ch;
+      tc.getContext('2d').drawImage(img, 0, 0, cw, ch);
       URL.revokeObjectURL(url);
-      tc.toBlob(b => resolve(URL.createObjectURL(b)), 'image/jpeg', 0.7);
+      // display dimensions (scale down to DISP on the longer side)
+      const scale = DISP / Math.max(cw, ch);
+      const dw = Math.round(cw * scale);
+      const dh = Math.round(ch * scale);
+      tc.toBlob(b => resolve({ url: URL.createObjectURL(b), w: dw, h: dh }), 'image/jpeg', 0.7);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(''); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve({ url: '', w: 72, h: 54 }); };
     img.src = url;
   });
 }
