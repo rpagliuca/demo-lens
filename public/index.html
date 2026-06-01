@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SKU Detector</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Camera feed -->
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="capture-canvas"></canvas>
+
+    <!-- Viewfinder overlay -->
+    <div id="viewfinder">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+      <div id="scan-line"></div>
+    </div>
+
+    <!-- Processing dim overlay -->
+    <div id="processing-overlay">
+      <div class="spinner"></div>
+      <span id="processing-label">Analisando...</span>
+    </div>
+
+    <!-- Top bar -->
+    <div id="top-bar">
+      <div id="mode-tabs">
+        <button class="tab active" data-mode="sku">SKU</button>
+        <button class="tab" data-mode="detect">Detecção</button>
+        <button class="tab" data-mode="quality">Qualidade</button>
+      </div>
+      <div id="quality-options" class="hidden">
+        <select id="product-type">
+          <option value="">Tipo (auto)</option>
+          <option value="washing_machine">Lavadora</option>
+          <option value="refrigerator">Geladeira</option>
+          <option value="dishwasher">Lava-louças</option>
+          <option value="air_conditioner">Ar-condicionado</option>
+          <option value="microwave">Micro-ondas</option>
+          <option value="oven">Forno</option>
+          <option value="dryer">Secadora</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Status pill -->
+    <div id="status-pill">
+      <span id="status-dot"></span>
+      <span id="status-text">Iniciando câmera...</span>
+    </div>
+
+    <!-- ── Result modal ─────────────────────────────────────────── -->
+    <div id="result-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-box result-modal-box">
+        <button class="modal-x" id="result-modal-close" aria-label="Fechar">✕</button>
+        <p class="modal-eyebrow">SKU Identificado</p>
+        <h2 id="result-sku-value"></h2>
+        <div id="result-confidence-badge"></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" id="btn-more-info">Mais informações</button>
+          <button class="btn-primary" id="btn-result-close">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── More info modal ─────────────────────────────────────── -->
+    <div id="info-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal-box info-modal-box">
+        <button class="modal-x" id="info-modal-close" aria-label="Fechar">✕</button>
+        <p class="modal-eyebrow">Mais informações</p>
+        <div id="info-modal-body"></div>
+      </div>
+    </div>
+
+    <!-- ── Debug panel ─────────────────────────────────────────── -->
+    <button id="debug-icon" title="Debug" aria-label="Abrir debug">&#60;/&#62;</button>
+
+    <div id="debug-panel" class="hidden">
+      <div id="debug-panel-header">
+        <span class="debug-title">&#60;/&#62; Dev Log</span>
+        <label class="debug-toggle-label">
+          <input type="checkbox" id="debug-enabled" autocomplete="off">
+          <span>Ativar</span>
+        </label>
+        <button id="debug-clear">Limpar</button>
+        <button id="debug-panel-close">✕</button>
+      </div>
+      <div id="debug-log-list"></div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

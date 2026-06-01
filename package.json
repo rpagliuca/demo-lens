@@ -1,0 +1,8 @@
+{
+  "name": "wa-sku-detector",
+  "version": "1.0.0",
+  "description": "SKU & appliance quality detector — Google Lens-style webapp",
+  "scripts": {
+    "dev": "npx serve public -p 3000 -n"
+  }
+}
