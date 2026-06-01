@@ -393,61 +393,106 @@ html, body {
 
 #debug-panel-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  flex-direction: column;
+  gap: 0;
+  padding: 14px 16px 0;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   flex-shrink: 0;
   background: rgba(0,0,0,0.4);
 }
 
+.debug-header-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.debug-header-row2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
 .debug-title {
   font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 13px;
+  font-size: 15px;
   color: #f7c948;
-  flex: 1;
 }
 
 .debug-toggle-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
   cursor: pointer;
+  padding: 6px 0;
 }
 
-.debug-toggle-label input { cursor: pointer; accent-color: #f7c948; }
+.debug-toggle-label input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #f7c948;
+}
 
 .debug-threshold-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.55);
-  white-space: nowrap;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  flex: 1;
+  min-width: 180px;
 }
 
 .debug-threshold-label input[type=range] {
-  width: 80px;
+  flex: 1;
+  height: 20px;
   accent-color: #f7c948;
   cursor: pointer;
 }
 
 #debug-threshold-value {
   font-family: monospace;
+  font-size: 14px;
   color: #f7c948;
-  min-width: 32px;
+  min-width: 38px;
+  text-align: right;
 }
 
-#debug-clear, #debug-panel-close {
+#debug-clear {
   background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.6);
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+#debug-panel-close {
+  background: rgba(99,202,255,0.12);
+  border: 1px solid rgba(99,202,255,0.3);
+  color: #63caff;
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.debug-persist-note {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  padding-bottom: 10px;
+  font-style: italic;
 }
 
 #debug-log-list {
@@ -465,12 +510,14 @@ html, body {
 }
 
 .debug-thumb {
-  width: 64px;
-  height: 48px;
+  max-width: 72px;
+  max-height: 72px;
+  width: auto;
+  height: auto;
   border-radius: 6px;
-  object-fit: cover;
   flex-shrink: 0;
   background: #111;
+  align-self: flex-start;
 }
 
 .debug-entry-body {
