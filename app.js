@@ -284,19 +284,32 @@ function showResultModal(groups, fullData) {
   detectionPaused = true;
   setStatus('SKU identificado', 'ready');
 
-  resultSkuValue.innerHTML = groups.map((g, i) => {
-    return g.skus.map(sku =>
+  resultSkuValue.style.fontSize = '';
+  resultSkuValue.innerHTML = groups.map(g =>
+    g.skus.map(sku =>
       `<span class="sku-result-line">` +
         `<span class="sku-text">${escHtml(sku)}</span>` +
         `<span class="sku-conf">${(g.confidence * 100).toFixed(1)}%</span>` +
       `</span>`
-    ).join('');
-  }).join('');
+    ).join('')
+  ).join('');
+
+  fitSkuFontSize();
 
   resultConfBadge.textContent = '';
-
   resultModal._fullData = fullData;
   resultModal.classList.remove('hidden');
+}
+
+function fitSkuFontSize() {
+  const MIN_PX = 13;
+  const startPx = parseFloat(getComputedStyle(resultSkuValue).fontSize);
+  for (let size = startPx; size >= MIN_PX; size -= 0.5) {
+    resultSkuValue.style.fontSize = size + 'px';
+    const overflows = [...resultSkuValue.querySelectorAll('.sku-text')]
+      .some(el => el.scrollWidth > el.clientWidth + 1);
+    if (!overflows) break;
+  }
 }
 
 function closeResultModal() {
