@@ -281,7 +281,8 @@ html, body {
 .sku-text {
   flex: 1;
   text-align: left;
-  word-break: break-all;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .sku-conf {
