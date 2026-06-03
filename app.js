@@ -306,14 +306,12 @@ function showResultModal(groups, fullData) {
   setStatus('SKU identificado', 'ready');
 
   resultSkuValue.innerHTML = groups.map((g, i) => {
-    const divider = i > 0 ? '<div class="sku-group-divider"></div>' : '';
-    const lines = g.skus.map(sku =>
+    return g.skus.map(sku =>
       `<span class="sku-result-line">` +
         `<span class="sku-text">${escHtml(sku)}</span>` +
         `<span class="sku-conf">${(g.confidence * 100).toFixed(1)}%</span>` +
       `</span>`
     ).join('');
-    return divider + lines;
   }).join('');
 
   resultConfBadge.textContent = '';
