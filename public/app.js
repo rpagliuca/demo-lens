@@ -9,7 +9,7 @@ const CONFIG = {
   confidenceThreshold: 0.6,
 };
 
-const AI_BASE = 'https://ms-ai-services.public.homologation.lb1.yes.network';
+const AI_BASE = 'https://proxy-api-ia.public.production.lb1.yes.network';
 
 /* ─── Helpers ───────────────────────────────────────────────── */
 
