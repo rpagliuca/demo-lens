@@ -11,6 +11,48 @@ const CONFIG = {
 
 const AI_BASE = 'https://proxy-api-ia.public.production.lb1.yes.network';
 
+/* ─── Mock ───────────────────────────────────────────────────── */
+
+const MOCK_SKUS = [
+  { skus: ['04260FBA106'], features: 'FREEZER_ELECTROLUX_BRANCO_165CM' },
+  { skus: ['06501FBA106', '06501FBA206'], features: 'FREEZER_ELECTROLUX_BRANCO_90CM' },
+  { skus: ['DFX41BBBNA'], features: 'GELADEIRA_BRASTEMP_FROST_FREE_419L' },
+  { skus: ['BRM54HKBNA', 'BRM54AKBNA'], features: 'GELADEIRA_BRASTEMP_FROST_FREE_375L' },
+  { skus: ['RE80NAMMGH'], features: 'AR_CONDICIONADO_SAMSUNG_WIND_FREE_9000BTU' },
+  { skus: ['WF5000HAWA', 'WF5000HAWABAZ'], features: 'MAQUINA_LAVAR_SAMSUNG_11KG' },
+];
+
+const MOCK_COLORS   = ['BRANCO', 'PRETO', 'INOX', 'TITANIUM'];
+const MOCK_BRANDS   = ['ELECTROLUX', 'BRASTEMP', 'SAMSUNG', 'LG', 'CONSUL'];
+const MOCK_PRODUCTS = ['GELADEIRA', 'FREEZER', 'MICRO-ONDAS', 'AR-CONDICIONADO', 'MAQUINA-LAVAR'];
+
+function rnd(min, max) { return Math.random() * (max - min) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function mockResponse(_real) {
+  const c1idx = Math.floor(Math.random() * MOCK_SKUS.length);
+  let c2idx   = (c1idx + 1 + Math.floor(Math.random() * (MOCK_SKUS.length - 1))) % MOCK_SKUS.length;
+
+  const conf1 = parseFloat(rnd(0.10, 0.95).toFixed(3));
+  const conf2 = parseFloat(rnd(0.05, conf1 * 0.8).toFixed(3));
+
+  return {
+    status: 200,
+    message: 'success (mock)',
+    data: {
+      image_features: {
+        color_cls:        { color_index: 0,  color: pick(MOCK_COLORS),   confidence: parseFloat(rnd(0.2, 0.99).toFixed(3)) },
+        brand_cls:        { brand_index: 0,  brand: pick(MOCK_BRANDS),   confidence: parseFloat(rnd(0.2, 0.99).toFixed(3)) },
+        product_type_cls: { product_type_index: 0, product_type: pick(MOCK_PRODUCTS), confidence: parseFloat(rnd(0.2, 0.99).toFixed(3)) },
+      },
+      sku_candidates: [
+        { rank: 1, super_class: c1idx, agregated_features: MOCK_SKUS[c1idx].features, skus: MOCK_SKUS[c1idx].skus, confidence: conf1 },
+        { rank: 2, super_class: c2idx, agregated_features: MOCK_SKUS[c2idx].features, skus: MOCK_SKUS[c2idx].skus, confidence: conf2 },
+      ],
+    },
+  };
+}
+
 /* ─── Helpers ───────────────────────────────────────────────── */
 
 function normalizeSkus(skus) {
@@ -27,6 +69,7 @@ let detectionPaused = false;   // true while result modal is open
 let captureTimer    = null;
 let stream          = null;
 let debugEnabled    = false;
+let mockEnabled     = false;
 let debugEntryCount = 0;
 let debugLog        = [];   // mirrors DOM entries, newest first: [{ts, endpoint, latencyMs, response, thumbBlob}]
 
@@ -166,6 +209,7 @@ async function runAnalysis() {
   try {
     blob = await captureFrame();
     response = await sendToAPI(blob);
+    if (mockEnabled) response = mockResponse(response);
     const latencyMs = Date.now() - t0;
 
     if (debugEnabled) {
@@ -324,6 +368,10 @@ document.getElementById('debug-panel-close').addEventListener('click', () => {
 
 debugEnabled_cb.addEventListener('change', () => {
   debugEnabled = debugEnabled_cb.checked;
+});
+
+document.getElementById('debug-mock').addEventListener('change', function () {
+  mockEnabled = this.checked;
 });
 
 const thresholdSlider = document.getElementById('debug-threshold');
