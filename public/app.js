@@ -294,11 +294,10 @@ function showResultModal(groups, fullData) {
     ).join('')
   ).join('');
 
-  fitSkuFontSize();
-
   resultConfBadge.textContent = '';
   resultModal._fullData = fullData;
-  resultModal.classList.remove('hidden');
+  resultModal.classList.remove('hidden');  // must be visible before measuring
+  fitSkuFontSize();
 }
 
 function fitSkuFontSize() {
