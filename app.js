@@ -6,7 +6,7 @@ const CONFIG = {
   blurSampleWidth: 160,
   blurSampleHeight: 120,
   captureQuality: 0.88,
-  confidenceThreshold: 0.6,
+  confidenceThreshold: 0.15,
 };
 
 const AI_BASE = 'https://proxy-api-ia.public.production.lb1.yes.network';
@@ -195,18 +195,29 @@ function handleResponse(payload) {
     return;
   }
 
-  const data = payload.data;
-  const confidence = typeof data.confidence === 'number' ? data.confidence : 0;
-  const skus = normalizeSkus(data.skus);
-
-  // Low confidence OR unknown SKU → silent, keep trying
-  if (confidence < CONFIG.confidenceThreshold || !skus || skus.toLowerCase() === 'unknown') {
+  const candidates = payload.data.sku_candidates;
+  if (!Array.isArray(candidates) || candidates.length === 0) {
     setStatus('Nenhum SKU identificado', 'ready');
     return;
   }
 
-  // High confidence + known SKU → show result modal, pause detection
-  showResultModal(skus, confidence, data);
+  const results = [];
+  for (const candidate of candidates) {
+    if (candidate.confidence < CONFIG.confidenceThreshold) continue;
+    for (const sku of (candidate.skus || [])) {
+      const s = String(sku).trim();
+      if (s && s.toLowerCase() !== 'unknown') {
+        results.push({ sku: s, confidence: candidate.confidence });
+      }
+    }
+  }
+
+  if (results.length === 0) {
+    setStatus('Nenhum SKU identificado', 'ready');
+    return;
+  }
+
+  showResultModal(results, payload.data);
 }
 
 /* ─── Frame capture ──────────────────────────────────────────── */
@@ -219,7 +230,7 @@ function captureFrame() {
 }
 
 function apiEndpoint() {
-  if (currentMode === 'sku')    return `${AI_BASE}/api/v1/skuclassification/pipeline/`;
+  if (currentMode === 'sku')    return `${AI_BASE}/api/v1/skuclassification/pipeline/extended`;
   if (currentMode === 'detect') return `${AI_BASE}/api/v1/detection/`;
   const pt = productType.value;
   return `${AI_BASE}/api/v1/defects/pipeline_product_type_quality` + (pt ? `?product_type=${encodeURIComponent(pt)}` : '');
@@ -248,16 +259,16 @@ async function sendToAPI(blob) {
 
 /* ─── Result modal ───────────────────────────────────────────── */
 
-function showResultModal(sku, confidence, fullData) {
+function showResultModal(results, fullData) {
   detectionPaused = true;
   setStatus('SKU identificado', 'ready');
 
-  resultSkuValue.textContent = sku;
-  resultConfBadge.textContent = `Confiança: ${(confidence * 100).toFixed(1)}%`;
+  resultSkuValue.innerHTML = results
+    .map(r => `<span class="sku-result-line">${escHtml(r.sku)}<span class="sku-conf">${(r.confidence * 100).toFixed(1)}%</span></span>`)
+    .join('');
+  resultConfBadge.textContent = '';
 
-  // Store full data for "Mais informações"
   resultModal._fullData = fullData;
-
   resultModal.classList.remove('hidden');
 }
 
@@ -352,10 +363,16 @@ async function exportDebugLog() {
       const imgFilename = `frame_${String(n).padStart(3, '0')}.jpg`;
       if (entry.thumbBlob) imgFolder.file(imgFilename, entry.thumbBlob);
 
-      const conf = entry.response?.data?.confidence;
+      const cands = entry.response?.data?.sku_candidates;
+      const conf = Array.isArray(cands) && cands.length > 0 ? cands[0].confidence : undefined;
       const confPct = typeof conf === 'number' ? `${(conf * 100).toFixed(1)}%` : '';
-      const passed  = typeof conf === 'number' && conf >= CONFIG.confidenceThreshold
-                   && normalizeSkus(entry.response?.data?.skus).toLowerCase() !== 'unknown';
+      const passed = Array.isArray(cands) && cands.some(c =>
+        c.confidence >= CONFIG.confidenceThreshold &&
+        (c.skus || []).some(s => String(s).toLowerCase() !== 'unknown'));
+      const skusStr = (cands || [])
+        .filter(c => c.confidence >= CONFIG.confidenceThreshold)
+        .flatMap(c => (c.skus || []).map(s => `${s}(${(c.confidence * 100).toFixed(1)}%)`))
+        .join(', ');
 
       rows.push([
         n,
@@ -364,7 +381,7 @@ async function exportDebugLog() {
         entry.latencyMs,
         confPct,
         passed ? 'sim' : 'nao',
-        normalizeSkus(entry.response?.data?.skus),
+        skusStr,
         entry.thumbBlob ? `images/${imgFilename}` : '',
         JSON.stringify(entry.response),
       ]);
@@ -402,10 +419,12 @@ function addDebugLog({ ts, endpoint, latencyMs, thumb, response }) {
   const empty = debugLogList.querySelector('.debug-empty');
   if (empty) empty.remove();
 
-  const conf   = response?.data?.confidence;
+  const cands  = response?.data?.sku_candidates;
+  const conf   = Array.isArray(cands) && cands.length > 0 ? cands[0].confidence : null;
   const confPct = typeof conf === 'number' ? `${(conf * 100).toFixed(1)}%` : '—';
-  const passed  = typeof conf === 'number' && conf >= CONFIG.confidenceThreshold
-               && normalizeSkus(response?.data?.skus).toLowerCase() !== 'unknown';
+  const passed  = Array.isArray(cands) && cands.some(c =>
+    c.confidence >= CONFIG.confidenceThreshold &&
+    (c.skus || []).some(s => String(s).toLowerCase() !== 'unknown'));
 
   const el = document.createElement('div');
   el.className = 'debug-entry';
