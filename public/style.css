@@ -268,7 +268,23 @@ html, body {
   letter-spacing: 0.5px;
   margin-bottom: 14px;
   word-break: break-word;
-  white-space: pre-line;
+}
+
+.sku-result-line {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.sku-result-line:last-child {
+  margin-bottom: 0;
+}
+
+.sku-conf {
+  font-size: 0.6em;
+  font-weight: 500;
+  color: #81c784;
+  margin-left: 10px;
+  vertical-align: middle;
 }
 
 #result-confidence-badge {
