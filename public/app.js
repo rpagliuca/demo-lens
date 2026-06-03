@@ -326,9 +326,14 @@ function buildInfoRows(data, prefix) {
     if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
       return buildInfoRows(v, key);
     }
-    const display = typeof v === 'number' && v > 0 && v <= 1
-      ? `${(v * 100).toFixed(2)}%`
-      : escHtml(String(v));
+    let display;
+    if (Array.isArray(v) && v.some(item => item !== null && typeof item === 'object')) {
+      display = `<pre class="info-json">${escHtml(JSON.stringify(v, null, 2))}</pre>`;
+    } else if (typeof v === 'number' && v > 0 && v <= 1) {
+      display = `<span>${(v * 100).toFixed(2)}%</span>`;
+    } else {
+      display = `<span>${escHtml(String(v))}</span>`;
+    }
     return `<div class="info-field">
       <span class="info-key">${escHtml(key)}</span>
       <span class="info-val${key.includes('index') ? ' mono' : ''}">${display}</span>
