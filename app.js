@@ -245,23 +245,21 @@ function handleResponse(payload) {
     return;
   }
 
-  const results = [];
+  const groups = [];
   for (const candidate of candidates) {
     if (candidate.confidence < CONFIG.confidenceThreshold) continue;
-    for (const sku of (candidate.skus || [])) {
-      const s = String(sku).trim();
-      if (s && s.toLowerCase() !== 'unknown') {
-        results.push({ sku: s, confidence: candidate.confidence });
-      }
-    }
+    const skus = (candidate.skus || [])
+      .map(s => String(s).trim())
+      .filter(s => s && s.toLowerCase() !== 'unknown');
+    if (skus.length > 0) groups.push({ rank: candidate.rank, confidence: candidate.confidence, skus });
   }
 
-  if (results.length === 0) {
+  if (groups.length === 0) {
     setStatus('Nenhum SKU identificado', 'ready');
     return;
   }
 
-  showResultModal(results, payload.data);
+  showResultModal(groups, payload.data);
 }
 
 /* ─── Frame capture ──────────────────────────────────────────── */
@@ -303,13 +301,21 @@ async function sendToAPI(blob) {
 
 /* ─── Result modal ───────────────────────────────────────────── */
 
-function showResultModal(results, fullData) {
+function showResultModal(groups, fullData) {
   detectionPaused = true;
   setStatus('SKU identificado', 'ready');
 
-  resultSkuValue.innerHTML = results
-    .map(r => `<span class="sku-result-line">${escHtml(r.sku)}<span class="sku-conf">${(r.confidence * 100).toFixed(1)}%</span></span>`)
-    .join('');
+  resultSkuValue.innerHTML = groups.map((g, i) => {
+    const divider = i > 0 ? '<div class="sku-group-divider"></div>' : '';
+    const lines = g.skus.map(sku =>
+      `<span class="sku-result-line">` +
+        `<span class="sku-text">${escHtml(sku)}</span>` +
+        `<span class="sku-conf">${(g.confidence * 100).toFixed(1)}%</span>` +
+      `</span>`
+    ).join('');
+    return divider + lines;
+  }).join('');
+
   resultConfBadge.textContent = '';
 
   resultModal._fullData = fullData;

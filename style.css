@@ -271,25 +271,41 @@ html, body {
 }
 
 .sku-result-line {
-  display: block;
-  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
 }
 
-.sku-result-line:last-child {
-  margin-bottom: 0;
+.sku-text {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sku-conf {
+  flex-shrink: 0;
   display: inline-block;
   background: rgba(76,175,80,0.15);
   border: 1px solid rgba(76,175,80,0.4);
   color: #81c784;
   border-radius: 20px;
-  padding: 2px 10px;
-  font-size: 0.55em;
+  padding: 3px 11px;
+  font-size: 0.5em;
   font-weight: 600;
-  margin-left: 10px;
-  vertical-align: middle;
+}
+
+.sku-group-divider {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 8px 0;
+}
+
+#result-confidence-badge:empty {
+  display: none;
 }
 
 #result-confidence-badge {
